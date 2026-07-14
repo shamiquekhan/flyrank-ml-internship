@@ -1,0 +1,30 @@
+{
+  "precision_at_k": {
+    "base_rate": 0.5421,
+    "p10": 0.5,
+    "p20": 0.55,
+    "p50": 0.58
+  },
+  "reason_code_counts": {
+    "CTR_GAP": 555,
+    "MONITOR": 29399,
+    "STALE_VISIBLE": 46
+  },
+  "rule_name": "Stale + Visible + CTR Gap = Refresh Priority",
+  "score_distribution": {
+    "max": 70.9,
+    "mean": 23.61,
+    "median": 23.5,
+    "min": 0.7,
+    "std": 9.89
+  },
+  "signal1": {
+    "name": "Content Staleness",
+    "verdict": "CONFIRMED"
+  },
+  "signal2": {
+    "name": "CTR vs Position",
+    "verdict": "MIXED"
+  },
+  "total_pages": 30000
+}
