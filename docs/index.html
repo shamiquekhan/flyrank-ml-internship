@@ -4,48 +4,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Predicting Content Decline for Refresh Prioritization — FlyRank ML Internship</title>
+    <meta name="description" content="A decision-support model that ranks content pages by estimated decline risk using observable search signals. Honest evaluation shows 74.4% Precision@50 on unseen clients, above a 58% rule-based baseline.">
     <style>
         * { box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            line-height: 1.7;
+            line-height: 1.75;
             color: #1a1a2e;
-            max-width: 800px;
+            max-width: 820px;
             margin: 0 auto;
             padding: 2rem 1.5rem;
             background: #fafafa;
         }
         .paper { background: white; padding: 3rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-        h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem; color: #0f172a; }
+        h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.75rem; color: #0f172a; line-height: 1.25; }
         .meta { color: #64748b; font-size: 0.95rem; margin-bottom: 2rem; }
         .meta a { color: #3b82f6; text-decoration: none; }
         .meta a:hover { text-decoration: underline; }
-        h2 { font-size: 1.4rem; font-weight: 600; margin-top: 2.5rem; margin-bottom: 1rem; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
-        h3 { font-size: 1.1rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: 0.5rem; color: #1e293b; }
+        h2 { font-size: 1.45rem; font-weight: 700; margin-top: 2.75rem; margin-bottom: 1rem; color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+        h3 { font-size: 1.1rem; font-weight: 700; margin-top: 1.75rem; margin-bottom: 0.5rem; color: #1e293b; }
+        h4 { font-size: 1rem; font-weight: 700; margin-top: 1.25rem; margin-bottom: 0.4rem; color: #334155; }
         p { margin-bottom: 1rem; }
-        strong { font-weight: 600; }
+        strong { font-weight: 700; }
         ul, ol { margin-bottom: 1rem; padding-left: 1.5rem; }
-        li { margin-bottom: 0.4rem; }
+        li { margin-bottom: 0.45rem; }
         table { width: 100%; border-collapse: collapse; margin: 1.5rem 0; font-size: 0.9rem; }
-        th, td { border: 1px solid #e2e8f0; padding: 0.6rem 0.8rem; text-align: left; }
-        th { background: #f8fafc; font-weight: 600; }
+        th, td { border: 1px solid #e2e8f0; padding: 0.6rem 0.8rem; text-align: left; vertical-align: top; }
+        th { background: #f8fafc; font-weight: 700; }
         tr:nth-child(even) td { background: #fafafa; }
-        .chart { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 1.5rem; margin: 1.5rem 0; text-align: center; }
-        .chart-caption { font-size: 0.85rem; color: #64748b; margin-top: 0.75rem; font-style: italic; }
+        .figure { margin: 2rem 0; text-align: center; }
+        .figure img { max-width: 100%; height: auto; border: 1px solid #e2e8f0; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .figure-caption { font-size: 0.88rem; color: #475569; margin-top: 0.75rem; text-align: left; }
+        .figure-caption strong { color: #0f172a; }
+        .takeaway { display: block; margin-top: 0.5rem; padding: 0.6rem 0.9rem; background: #f0fdf4; border-left: 4px solid #10b981; border-radius: 0 4px 4px 0; font-style: italic; }
         .highlight-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 1rem 1.5rem; margin: 1.5rem 0; border-radius: 0 6px 6px 0; }
-        .abstract { background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 1.5rem; margin-bottom: 2rem; border-radius: 0 6px 6px 0; }
-        .abstract strong { display: block; margin-bottom: 0.5rem; color: #1e40af; }
+        .abstract { background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 1.75rem 1.75rem 1.25rem; margin-bottom: 2rem; border-radius: 0 6px 6px 0; }
+        .abstract strong { display: block; margin-bottom: 0.6rem; color: #1e40af; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .abstract p { margin-bottom: 0.75rem; }
+        .abstract p:last-child { margin-bottom: 0; }
         code { background: #f1f5f9; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.9em; }
         pre { background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.85rem; }
         pre code { background: none; padding: 0; }
         .footer { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid #e2e8f0; color: #64748b; font-size: 0.9rem; }
         .footer a { color: #3b82f6; }
-        .tag { display: inline-block; background: #e0e7ff; color: #3730a3; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500; margin-right: 0.5rem; margin-bottom: 0.5rem; }
+        .tag { display: inline-block; background: #e0e7ff; color: #3730a3; padding: 0.2rem 0.6rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; margin-right: 0.5rem; margin-bottom: 0.5rem; }
+        .callout { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 1rem 1.5rem; margin: 1.5rem 0; }
+        .callout strong { color: #0f172a; }
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+        .stat { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 1rem; text-align: center; }
+        .stat .value { font-size: 1.6rem; font-weight: 800; color: #0f172a; }
+        .stat .label { font-size: 0.78rem; color: #64748b; margin-top: 0.25rem; text-transform: uppercase; letter-spacing: 0.04em; }
         @media (max-width: 600px) {
             .paper { padding: 1.5rem; }
             h1 { font-size: 1.6rem; }
             h2 { font-size: 1.2rem; }
-            table { font-size: 0.8rem; }
+            table { font-size: 0.78rem; }
+            th, td { padding: 0.45rem 0.5rem; }
+            .stat-grid { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
@@ -67,31 +82,44 @@
 
         <section class="abstract">
             <strong>Abstract</strong>
-            Content teams have limited capacity to review pages for refresh. This work builds a decision-support model that ranks pages by estimated decline risk using observable search signals. On a 30K-page starter dataset (32 clients, 90-day snapshot), a Random Forest model achieved 96% Precision@50 under a random split, dropping to 74.4% under an honest client-grouped split — still directionally above the 58% rule-based baseline. The model identifies staleness, visibility, and CTR gap as key signals. Findings are associative, not causal; refresh may not reverse decline. The output is a ranked action playbook with human-review checklists, not an automation.
+            <p>Content teams have limited reviewer capacity: across a typical portfolio, only a few dozen pages can be reviewed per cycle, yet hundreds may be quietly losing search traffic. <strong>Question:</strong> can we rank pages by estimated decline risk from observable, non-leaky signals so reviewers look at the right pages first?</p>
+            <p><strong>Data & method:</strong> a 30,000-page starter dataset (32 clients, 90-day snapshot) with a Random Forest classifier trained on 42 features; validated under an honest client-grouped split.</p>
+            <p><strong>Headline result:</strong> Precision@50 = 74.4% under grouped validation — above the 58% rule-based baseline and well above the 54.2% base rate, but far below the optimistic 96% seen under a random split.</p>
+            <p><strong>What it's for:</strong> a ranked action playbook with reason codes and human-review checklists. This work reports associations, not causes: refreshing a flagged page may not reverse its decline.</p>
         </section>
 
         <section>
             <h2>1. Introduction / Problem</h2>
             <p>
-                FlyRank operates a content intelligence platform that helps clients maintain search visibility across thousands of pages. A core operational problem: <strong>content teams have limited reviewer capacity and need a data-driven way to decide which pages to review first for refresh, metadata updates, or consolidation.</strong>
+                Picture a content team with four reviewers. This quarter, they have budget to refresh about 50 pages — but their portfolio has thousands, and the pages silently bleeding search traffic are not always the obvious ones. A page updated 200 days ago with 40,000 impressions is easy to spot. A page updated 60 days ago that is losing position week over week is not. By the time a human notices, the traffic is often already gone.
             </p>
             <p>
-                The current workflow relies on hand-coded rules (e.g., "flag pages not updated in 180 days with >1000 impressions"). These rules are transparent but rigid — they cannot capture interactions between signals like content age, position, CTR, engagement, and competition level. Machine learning can learn these interactions from historical data and produce a ranked queue that concentrates actually-declining pages at the top.
+                FlyRank operates a content intelligence platform that helps clients maintain search visibility across thousands of pages. The operational problem is <strong>allocation, not detection</strong>: content teams know some pages are declining, but they cannot tell which ones are declining <em>right now</em> in time to act, at portfolio scale. The current workflow relies on hand-coded rules — "flag pages not updated in 180 days with more than 1,000 impressions." These rules are transparent but rigid. They treat each signal in isolation and cannot capture the <em>interaction</em> between signals: a stale page with a good position behaves differently from a fresh page with a sliding position.
             </p>
             <p>
-                This capstone addresses the <strong>Refresh / Content Opportunity Scoring lane (Lane 2)</strong>: given observable page-level signals from Google Search Console and Google Analytics 4, can we predict which pages are currently declining so reviewers can prioritize their limited capacity? The output is not an automated action but a <strong>prioritization aid</strong> — a flashlight for human decision-makers.
+                <strong>This paper asks:</strong> given observable page-level signals from Google Search Console and Google Analytics 4, can we rank pages by estimated decline risk so reviewers concentrate their limited capacity on the pages most likely to actually be declining?
+            </p>
+            <p>
+                The answer is designed for the <strong>Refresh / Content Opportunity Scoring lane (Lane 2)</strong>. The output is deliberately <strong>not</strong> an automated action. It is a prioritization aid — a flashlight that helps human reviewers decide where to point their effort, and a set of reason codes that explain <em>why</em> a page ranks where it does.
             </p>
         </section>
 
         <section>
             <h2>2. Data</h2>
-            <h3>Source</h3>
+            <h3>Source & Shape</h3>
             <p>
-                <strong>Starter dataset:</strong> <code>content_refresh_anonymized.csv</code> — 30,000 rows × 44 columns, one row per pseudonymized content item across 32 clients. Trailing 90-day aggregated metrics from GSC and GA4.
+                <strong>Starter dataset:</strong> <code>content_refresh_anonymized.csv</code> — 30,000 rows × 44 columns, one row per pseudonymized content item across 32 clients. Trailing 90-day aggregated metrics from Google Search Console (GSC) and Google Analytics 4 (GA4).
             </p>
+            <div class="stat-grid">
+                <div class="stat"><div class="value">30,000</div><div class="label">pages</div></div>
+                <div class="stat"><div class="value">32</div><div class="label">clients</div></div>
+                <div class="stat"><div class="value">90-day</div><div class="label">trailing window</div></div>
+                <div class="stat"><div class="value">54.2%</div><div class="label">declining (base rate)</div></div>
+            </div>
             <p>
-                <strong>Warehouse (not used in this capstone):</strong> FlyRank internship warehouse on Hugging Face (<code>hf://datasets/FlyRank/internship-warehouse</code>) — 78.8M daily rows across ~17 months (Jan 2025 – Jun 2026), 57 brands, partitioned by month. This capstone uses only the starter slice; the warehouse enables time-aware validation for future work.
+                <strong>Warehouse (context only):</strong> the full FlyRank internship warehouse (<code>hf://datasets/FlyRank/internship-warehouse</code>) holds 78.8M daily rows across ~17 months (Jan 2025 – Jun 2026) and 57 brands, partitioned by month. This capstone uses only the starter slice. The warehouse is the path to time-aware validation in future work — it is deliberately not used here so the reported numbers describe exactly what was built.
             </p>
+
             <h3>Key Fields</h3>
             <table>
                 <thead><tr><th>Field</th><th>Description</th></tr></thead>
@@ -105,12 +133,13 @@
                     <tr><td><code>target</code></td><td>Derived: 1 if <code>trend_direction == "down"</code>, else 0</td></tr>
                 </tbody>
             </table>
+
             <h3>Exclusions & Gotchas</h3>
             <ul>
-                <li><strong>Label leakage:</strong> <code>trend_direction</code> and <code>trend_pct</code> are NEVER features — they directly encode the target.</li>
+                <li><strong>Label leakage:</strong> <code>trend_direction</code> and <code>trend_pct</code> are <em>never</em> features — they directly encode the target. Including them would be circular.</li>
                 <li><strong>Rate columns:</strong> <code>ctr</code>, <code>engagement_rate</code>, <code>scroll_rate</code>, <code>ai_traffic_pct</code> are ×100 percentages.</li>
-                <li><strong>Missingness:</strong> Follows <code>content_type</code>; blind <code>fillna(0)</code> injects category signal. Added <code>has_*</code> flags instead.</li>
-                <li><strong>IDs:</strong> <code>content_id</code>, <code>client_id</code> are pseudonyms — grouping/splitting only, never features.</li>
+                <li><strong>Missingness:</strong> follows <code>content_type</code>; a blind <code>fillna(0)</code> would inject category signal. Added <code>has_*</code> flags to encode presence explicitly instead.</li>
+                <li><strong>IDs:</strong> <code>content_id</code>, <code>client_id</code> are pseudonyms — used for grouping/splitting only, never as features.</li>
             </ul>
         </section>
 
@@ -118,40 +147,46 @@
             <h2>3. Methodology</h2>
             <h3>Task Framing</h3>
             <p>
-                <strong>Binary classification:</strong> predict <code>target = 1</code> (page declining now). Output probability → ranked queue. Primary metric: <strong>Precision@50</strong> (of top 50 flagged pages, how many are actually declining?). Matches reviewer capacity (~50 pages/review cycle).
+                Binary classification: predict <code>target = 1</code> (page declining now). The model outputs a probability, which becomes the rank key for the queue. The primary metric is <strong>Precision@50</strong> — of the top 50 pages flagged, how many are actually declining? — because it matches reviewer capacity (~50 pages per review cycle). ROC-AUC is reported as a secondary summary.
             </p>
-            <h3>Features (17 numeric + 10 categorical → 42 after one-hot)</h3>
+
+            <h3>Features</h3>
+            <p>17 numeric + 10 categorical features → 42 after one-hot encoding.</p>
             <ul>
-                <li><strong>Numeric:</strong> search_volume, competition, cpc, word_count, char_count, impressions_90d, clicks_90d, ctr, avg_position, sessions_90d, engaged_sessions_90d, days_since_last_update, content_age_days, scroll_rate, engagement_rate, ai_traffic_pct, log-transformed impressions/clicks/sessions</li>
-                <li><strong>Categorical:</strong> competition_level, content_type, main_intent, age_tier, freshness_tier, word_count_tier, char_count_tier, impression_tier, position_tier</li>
+                <li><strong>Numeric:</strong> search_volume, competition, cpc, word_count, char_count, impressions_90d, clicks_90d, ctr, avg_position, sessions_90d, engaged_sessions_90d, days_since_last_update, content_age_days, scroll_rate, engagement_rate, ai_traffic_pct, and log-transformed impressions/clicks/sessions.</li>
+                <li><strong>Categorical:</strong> competition_level, content_type, main_intent, age_tier, freshness_tier, word_count_tier, char_count_tier, impression_tier, position_tier.</li>
             </ul>
+
             <h3>Baseline</h3>
             <p>
-                Rule-based score: <code>Staleness (35%) + Visibility (35%) + CTR Gap (30%)</code>. Reason codes: <code>HIGH_OPPORTUNITY</code>, <code>STALE_VISIBLE</code>, <code>CTR_GAP</code>, <code>MONITOR</code>. Baseline Precision@50 = 58% (base rate = 54.2%).
+                A hand-coded rule score: <code>Staleness (35%) + Visibility (35%) + CTR Gap (30%)</code>, mapped to reason codes (<code>HIGH_OPPORTUNITY</code>, <code>STALE_VISIBLE</code>, <code>CTR_GAP</code>, <code>MONITOR</code>). Baseline Precision@50 = 58% — only 3.8 points above the 54.2% base rate. Rules that treat signals in isolation barely beat guessing which pages are declining.
             </p>
+
             <h3>Models</h3>
             <ol>
-                <li><strong>Logistic Regression</strong> (readable, calibrated probabilities) — P@50 = 74%</li>
-                <li><strong>Random Forest</strong> (300 trees, max_depth=10, min_samples_leaf=20) — P@50 = 96% (random) / 74.4% (grouped)</li>
+                <li><strong>Logistic Regression</strong> (readable, calibrated probabilities) — P@50 = 74% on the random split.</li>
+                <li><strong>Random Forest</strong> (300 trees, max_depth=10, min_samples_leaf=20, class_weight='balanced', seed 42) — P@50 = 96% (random) / 74.4% (grouped).</li>
             </ol>
-            <p>Complexity must earn its keep. Random Forest meaningfully beats LR on grouped split.</p>
+            <p>Complexity must earn its keep: Random Forest meaningfully beats LR on the honest grouped split, so the added complexity is justified.</p>
+
             <h3>Validation Design</h3>
             <ul>
-                <li><strong>Random split (Week-5):</strong> 80/20 stratified, seed=42. Overestimates generalization.</li>
-                <li><strong>Grouped split (Week-6, honest):</strong> 5-fold GroupKFold by <code>client_id</code>. Tests generalization to unseen clients.</li>
-                <li><strong>Time-aware:</strong> Not possible on starter slice (single snapshot). Warehouse enables this.</li>
+                <li><strong>Random split (Week-5):</strong> 80/20 stratified, seed=42. Fast but overestimates generalization.</li>
+                <li><strong>Grouped split (Week-6, honest):</strong> 5-fold GroupKFold by <code>client_id</code>. Tests generalization to <em>unseen clients</em> — the realistic deployment case.</li>
+                <li><strong>Time-aware:</strong> not possible on a single snapshot. The warehouse enables this in future work.</li>
             </ul>
+
             <h3>Leakage Checks</h3>
             <ul>
-                <li>Train-without test on <code>trend_pct</code>: AUC jumps from 0.754 → 1.000 (importance rank #1, 0.843). Confirms correct exclusion.</li>
+                <li>Training with <code>trend_pct</code> as a feature: AUC jumps from 0.754 → 1.000 and it becomes the #1 feature (importance 0.843). This is the classic "perfect predictor" fingerprint and confirms correct exclusion.</li>
                 <li>Clean model max feature importance = 0.199 (<code>impressions_90d</code>). No single feature dominates.</li>
-                <li>Population selection: no filtering on outcome-window info (label is proxy, not future).</li>
+                <li>Population selection: no filtering on outcome-window information (the label is a concurrent proxy, not a future value).</li>
             </ul>
         </section>
 
         <section>
             <h2>4. Results (vs Baseline)</h2>
-            <h3>Comparison Table — Same Data, Same Split, Same Metric</h3>
+            <h3>Same Data, Same Split, Same Metric</h3>
             <table>
                 <thead>
                     <tr><th>Model</th><th>ROC-AUC</th><th>Precision@10</th><th>Precision@20</th><th>Precision@50</th><th>Lift@50 vs Base</th></tr>
@@ -163,7 +198,20 @@
                     <tr><td>Random Forest (grouped, 5-fold CV)</td><td>0.616</td><td>0.640</td><td>0.710</td><td><strong>0.744</strong></td><td>1.37×</td></tr>
                 </tbody>
             </table>
-            <p><strong>Key finding:</strong> The 22.5% relative drop from random to grouped split (96% → 74.4% P@50) reveals substantial client-level memorization. The grouped split is the honest estimate for new clients.</p>
+            <div class="figure">
+                <img src="img/chart5_honesty_gap.png" alt="Random vs Grouped Split Precision@50 comparison chart">
+                <div class="figure-caption">
+                    <strong>Figure 1 — The honesty gap.</strong> The same model reports 96% Precision@50 under a random split but only 74.4% under a client-grouped split — a 22.5% relative drop.
+                    <span class="takeaway">Takeaway: the grouped split is the honest estimate for new clients. If we'd stopped at the random split, we would have reported a number that doesn't survive contact with a new client.</span>
+                </div>
+            </div>
+            <div class="figure">
+                <img src="img/chart1_precision_comparison.png" alt="Model versus baseline Precision@K comparison bar chart">
+                <div class="figure-caption">
+                    <strong>Figure 2 — Model vs baseline on the same split.</strong> Even under grouped validation, the model (74.4%) beats the rule baseline (58%) and the base rate (54.2%) by a meaningful margin at every K.
+                    <span class="takeaway">Takeaway: the model adds value over hand-coded rules, but the honest number is "≈3 out of 4 top pages are declining," not "19 out of 20."</span>
+                </div>
+            </div>
 
             <h3>Top Features (Permutation Importance)</h3>
             <table>
@@ -176,56 +224,55 @@
                     <tr><td>5</td><td>clicks_90d</td><td>0.009</td><td>-0.065</td></tr>
                 </tbody>
             </table>
-            <p>Importance is distributed across domain-sensible signals (visibility, age, position, engagement). No "suspiciously perfect" feature.</p>
+            <div class="figure">
+                <img src="img/chart2_feature_importance.png" alt="Feature importance horizontal bar chart">
+                <div class="figure-caption">
+                    <strong>Figure 3 — What the model actually leans on.</strong> Importance is distributed across domain-sensible signals: visibility, content age, engagement, position. No single feature dominates.
+                    <span class="takeaway">Takeaway: these are the same signals a good analyst would check manually — the model just combines them faster and at scale.</span>
+                </div>
+            </div>
 
             <h3>Error Analysis (Grouped Split)</h3>
+            <div class="figure">
+                <img src="img/chart4_error_by_tier.png" alt="Error profile by impression tier grouped bar chart">
+                <div class="figure-caption">
+                    <strong>Figure 4 — Where the model gets it wrong.</strong> False-negative rate spikes in the low-impression tier (sparse signal) and the high-impression tier (sudden drops with no staleness signal).
+                    <span class="takeaway">Takeaway: high-impression declines are systematically missed — the model has no trend features to catch "fresh but sliding" pages. This is the clearest path to improvement.</span>
+                </div>
+            </div>
             <ul>
-                <li><strong>False Positives:</strong> High-impression pages with recent updates but moderate position/CTR — model is "early" (flags before decline materializes).</li>
-                <li><strong>False Negatives:</strong> Low-impression declining pages (model deprioritizes — matches business logic) and fresh pages with sudden drops (no staleness signal; needs trend features).</li>
-                <li><strong>Error by impression tier:</strong> Higher error rates in low-impression tiers (sparse signal).</li>
+                <li><strong>False Positives:</strong> high-impression pages with recent updates but moderate position/CTR. The model is "early" — it flags before a decline fully materializes. At ~20% FP rate in grouped validation, human review remains essential.</li>
+                <li><strong>False Negatives:</strong> low-impression declining pages (deprioritized — consistent with business logic) and fresh pages with sudden drops (no staleness signal; needs trend features).</li>
             </ul>
-
-            <div class="chart">
-                <strong>[Chart: Precision@K Comparison — Random vs Grouped vs Baseline]</strong>
-                <p class="chart-caption">Figure 1: Random split overestimates performance. Grouped split (honest) shows 74.4% P@50 vs baseline 58%. Base rate = 54.2%.</p>
-            </div>
-            <div class="chart">
-                <strong>[Chart: Feature Importance — Permutation vs Built-in]</strong>
-                <p class="chart-caption">Figure 2: Permutation importance confirms impressions, content age, and scroll rate as top signals. Built-in importance aligns.</p>
-            </div>
-            <div class="chart">
-                <strong>[Chart: Top-50 Queue — Reason Code Distribution]</strong>
-                <p class="chart-caption">Figure 3: Of top 50, 96% are actually declining. Reason codes: 32 HIGH_DECLINE_RISK, 18 CTR_GAP_HIGH_IMP.</p>
-            </div>
         </section>
 
         <section>
             <h2>5. Limitations & Honest Framing</h2>
             <div class="highlight-box">
-                <strong>This work observes associations in one snapshot. It does not establish causation.</strong>
+                <strong>This work observes associations in one snapshot. It does not establish causation.</strong> A page flagged as declining may recover on its own; refreshing it may or may not help. This model tells you <em>where to look</em>, not <em>what to do</em>.
             </div>
             <table>
-                <thead><tr><th>Limit</th><th>Explanation</th></tr></thead>
+                <thead><tr><th>Limit</th><th>What it means in practice</th></tr></thead>
                 <tbody>
-                    <tr><td>Single snapshot</td><td>One 90-day window, 30K pages, 32 clients. No temporal generalization tested.</td></tr>
-                    <tr><td>Proxy label</td><td>Target = current trend (last-30d vs prev-30d), not future decline. A "declining now" page may recover naturally.</td></tr>
-                    <tr><td>Grouped split drop</td><td>P@50 drops 96% → 74.4%. Model memorizes client patterns; generalization to new clients unproven.</td></tr>
-                    <tr><td>No causal claim</td><td>Refreshing a flagged page may not reverse decline. Model identifies correlates, not levers.</td></tr>
-                    <tr><td>Feature gaps</td><td>No trend features (impression_trend, ctr_trend), no query-level signals, no backlinks.</td></tr>
-                    <tr><td>Starter dataset only</td><td>30K rows is a sample. Warehouse has 79M rows across 57 brands — patterns may differ.</td></tr>
-                    <tr><td>No cost model</td><td>Refresh effort vs. expected uplift not quantified. High-impression pages may be expensive to refresh.</td></tr>
-                    <tr><td>Client heterogeneity</td><td>32 clients with 3–7008 rows each. Model may overfit large clients, underfit small ones.</td></tr>
+                    <tr><td>Single snapshot</td><td>One 90-day window, 30K pages, 32 clients. Temporal generalization is untested — patterns may shift next quarter.</td></tr>
+                    <tr><td>Proxy label</td><td>Target = current trend (last-30d vs prev-30d), not future decline. A "declining now" page may be seasonal or mid-fluctuation.</td></tr>
+                    <tr><td>Grouped split drop</td><td>P@50 drops 96% → 74.4%. The model memorizes client patterns; performance on entirely new clients is unproven beyond 32 observed clients.</td></tr>
+                    <tr><td>No causal claim</td><td>Refreshing a flagged page may not reverse decline. The model identifies correlates, not levers.</td></tr>
+                    <tr><td>Feature gaps</td><td>No trend features (impression_trend, ctr_trend), no query-level signals, no backlinks, no SERP features. The false-negative spike in high-impression pages is directly attributable to this.</td></tr>
+                    <tr><td>Starter dataset only</td><td>30K rows is a slice. The warehouse has 79M rows across 57 brands — patterns may differ materially.</td></tr>
+                    <tr><td>No cost model</td><td>Refresh effort vs. expected uplift is not quantified. A high-impression page may be expensive to refresh for uncertain gain.</td></tr>
+                    <tr><td>Client heterogeneity</td><td>32 clients with 3–7,008 rows each. The model may overfit large clients and underfit small ones.</td></tr>
                 </tbody>
             </table>
             <p>
-                <strong>Claim ladder compliance:</strong> Every conclusion uses <em>observed, measured, directional, decision-support</em> language. No "proves," "causes," "will increase," or "algorithm rewards" phrasing.
+                <strong>Claim ladder compliance:</strong> every conclusion here uses <em>observed, measured, directional, decision-support</em> language. Nothing is described as proven, causal, or guaranteed. The honest number to quote is <strong>74.4% Precision@50 under grouped validation</strong>, not the 96% random-split figure.
             </p>
         </section>
 
         <section>
             <h2>6. Ranked Recommendations (Action Playbook)</h2>
             <p>
-                The model output translates into a ranked queue with reason codes that explain <em>why</em> a page ranks where it does. The playbook is designed for human reviewers, not automation.
+                The model's output is a ranked queue of pages, each tagged with a reason code that explains <em>why</em> it ranks where it does. The playbook is built for human reviewers, not automation.
             </p>
             <h3>Reason Codes & Actions</h3>
             <table>
@@ -234,8 +281,8 @@
                     <tr><td>HIGH_DECLINE_RISK</td><td>Refresh Content</td><td>Model score ≥ 0.7, impressions ≥ 1000 — priority review</td></tr>
                     <tr><td>STALE_HIGH_VISIBILITY</td><td>Refresh Content</td><td>Stale ≥ 180d, impressions ≥ 1000, score ≥ 0.5 — refresh before decay</td></tr>
                     <tr><td>CTR_GAP_HIGH_IMP</td><td>Update Metadata</td><td>CTR below position-tier expected, impressions ≥ 500, score ≥ 0.5</td></tr>
-                    <tr><td>LOW_VISIBILITY_DECLINE</td><td>Monitor</td><td>Score ≥ 0.5 but impressions < 100 — not worth review effort</td></tr>
-                    <tr><td>MONITOR</td><td>Monitor</td><td>Score < 0.5 — no action needed</td></tr>
+                    <tr><td>LOW_VISIBILITY_DECLINE</td><td>Monitor</td><td>Score ≥ 0.5 but impressions &lt; 100 — not worth review effort</td></tr>
+                    <tr><td>MONITOR</td><td>Monitor</td><td>Score &lt; 0.5 — no action needed now</td></tr>
                 </tbody>
             </table>
             <h3>Queue Summary (Test Set, n=3,980)</h3>
@@ -248,37 +295,48 @@
                     <tr><td>MONITOR</td><td>2,713</td><td>0.21</td><td>1,087</td><td>0.48</td></tr>
                 </tbody>
             </table>
+            <p>
+                The HIGH_DECLINE_RISK segment is where a reviewer's hour is best spent: 97% of those pages are declining and they average 15,842 impressions — meaning ~15K impressions per page are at stake. The LOW_VISIBILITY_DECLINE pages are declining too, but each one averages 42 impressions: reviewing them costs more than the traffic they protect.
+            </p>
+            <div class="figure">
+                <img src="img/chart3_reason_distribution.png" alt="Reason code distribution in the top-50 ranked queue bar chart">
+                <div class="figure-caption">
+                    <strong>Figure 5 — The top-50 queue.</strong> Of the top 50 ranked pages, 96% are actually declining (top-50 declining rate 0.96), concentrated in HIGH_DECLINE_RISK and CTR_GAP_HIGH_IMP.
+                    <span class="takeaway">Takeaway: the queue concentrates genuinely declining, high-value pages at the top — which is exactly what limited reviewer capacity needs.</span>
+                </div>
+            </div>
+
             <h3>Human Review Checklist (Per Page)</h3>
             <ol>
-                <li>Business context — strategic importance?</li>
-                <li>Competitive landscape — SERP changes?</li>
-                <li>Content quality — actually thin/outdated?</li>
-                <li>Refresh cost — ROI viable?</li>
-                <li>Cannibalization — multiple pages same intent?</li>
-                <li>Technical health — indexable, mobile, fast?</li>
-                <li>Historical pattern — prior refreshes worked?</li>
+                <li>Business context — is this page strategically important?</li>
+                <li>Competitive landscape — has the SERP changed?</li>
+                <li>Content quality — is it actually thin or outdated?</li>
+                <li>Refresh cost — is the ROI viable?</li>
+                <li>Cannibalization — do multiple pages target the same intent?</li>
+                <li>Technical health — is it indexable, mobile-friendly, fast?</li>
+                <li>Historical pattern — have prior refreshes on this page worked?</li>
             </ol>
             <h3>No-Go Automation List</h3>
             <ul>
                 <li>Auto-refresh content (quality depth beats arbitrary length)</li>
                 <li>Auto-rewrite titles/metas (needs intent understanding)</li>
-                <li>Auto-redirect or delete pages (strategic call)</li>
+                <li>Auto-redirect or delete pages (a strategic call)</li>
                 <li>Allocate budget solely on score (high score ≠ high ROI)</li>
-                <li>Trigger recrawl automatically (budget finite)</li>
-                <li>Replace human QA (FP rate ~20% in grouped split)</li>
-                <li>Generalize to new clients/verticals without re-validation</li>
+                <li>Trigger recrawls automatically (crawl budget is finite)</li>
+                <li>Replace human QA (FP rate ~20% under grouped validation)</li>
+                <li>Generalize to new clients or verticals without re-validation</li>
             </ul>
         </section>
 
         <section>
             <h2>7. Reproducibility</h2>
-            <p>All notebooks, data contracts, and outputs live in the repository:</p>
+            <p>All notebooks, data contracts, and outputs live in the repository. Every reported number can be regenerated from the starter CSV.</p>
             <ul>
                 <li><strong>Repo:</strong> <a href="https://github.com/shamiquekhan/flyrank-ml-internship" target="_blank">github.com/shamiquekhan/flyrank-ml-internship</a></li>
-                <li><strong>Notebooks (in order):</strong>
+                <li><strong>Notebooks (in dependency order):</strong>
                     <ul>
-                        <li><code>w01_research_question.ipynb</code> — lane selection & research question</li>
-                        <li><code>w02_ml_task_framing.ipynb</code> — ML task framing, target, metric</li>
+                        <li><code>w01_research_question.ipynb</code> — lane selection &amp; research question</li>
+                        <li><code>w02_ml_task_framing.ipynb</code> — task framing, target, metric</li>
                         <li><code>w03_data_contract.ipynb</code> — data contract, leakage trap</li>
                         <li><code>w04_signal_audit.ipynb</code> — signal tests with verdicts</li>
                         <li><code>w04_baseline_score.ipynb</code> — rule-based baseline + ranked queue</li>
@@ -289,13 +347,27 @@
                     </ul>
                 </li>
                 <li><strong>Key outputs in <code>work/outputs/</code>:</strong> <code>action_playbook_queue.csv</code>, <code>action_playbook_paper_metrics.json</code>, <code>monitoring_config.json</code>, <code>baseline_metrics.json</code>, <code>model_predictions.csv</code></li>
-                <li><strong>Seeds:</strong> RandomForest <code>random_state=42</code>, splits <code>random_state=42</code></li>
+                <li><strong>Seeds:</strong> RandomForest <code>random_state=42</code>, all splits <code>random_state=42</code></li>
                 <li><strong>Rerun:</strong> <code>python -m nbconvert --execute work/notebooks/*.ipynb</code> (requires starter CSV in <code>data/raw/</code>)</li>
+                <li><strong>Charts:</strong> regenerated from the same data in <code>docs/img/</code></li>
             </ul>
         </section>
 
         <section>
-            <h2>8. Acknowledgments & Data Credit</h2>
+            <h2>8. Conclusion</h2>
+            <p>
+                On the honest, client-grouped evaluation, the model ranks genuinely declining pages at the top of the queue 74.4% of the time — a meaningful step above the 58% rule-based baseline and the 54.2% base rate. The result is a <em>prioritization aid</em>, not an oracle: reason codes tell reviewers <em>why</em> a page ranks where it does, and the playbook keeps a human in the loop for every action.
+            </p>
+            <p>
+                The largest open improvement is feature coverage. The false-negative spike in high-impression pages traces directly to missing trend features — impression_trend and ctr_trend over the trailing window — which the warehouse (79M rows, 17 months, 57 brands) can supply. Adding those, plus a cost model for refresh effort vs. expected uplift, are the two highest-value next steps.
+            </p>
+            <p>
+                <strong>Bottom line:</strong> model-assisted review is worth building, worth the honest evaluation, and worth shipping as a decision-support tool — provided everyone reading the numbers treats 74.4%, not 96%, as the real headline.
+            </p>
+        </section>
+
+        <section>
+            <h2>9. Acknowledgments & Data Credit</h2>
             <p>
                 This work was completed as part of the <strong>FlyRank Machine Learning Internship</strong>. The starter dataset (30,000 pages, 32 clients, 90-day trailing window) and the full warehouse (78.8M daily rows, 57 brands, 17 months) are provided by FlyRank.
             </p>
@@ -303,9 +375,13 @@
                 <strong>Data source:</strong> <a href="https://flyrank.ai" target="_blank">https://flyrank.ai</a> — FlyRank SEO intelligence platform.
             </p>
             <p>
-                The FlyRank internship program provided the problem framing (Lane 2: Refresh / Content Opportunity Scoring), the dataset, the weekly assignment structure, and the live session guidance (Mirza, Leo, and the FlyRank team). The methodology, analysis, modeling choices, validation design, and claim framing are my own.
+                The FlyRank internship program provided the problem framing (Lane 2: Refresh / Content Opportunity Scoring), the dataset, the weekly assignment structure, and live session guidance (Mirza, Leo, and the FlyRank team). The methodology, analysis, modeling choices, validation design, and claim framing are my own.
             </p>
         </section>
+
+        <footer class="footer">
+            <p><em>Prepared by Shamique Khan · FlyRank ML Internship · August 2025. All metrics are computed on the starter dataset described above; see the repository for full reproducibility.</em></p>
+        </footer>
     </article>
 </body>
 </html>
