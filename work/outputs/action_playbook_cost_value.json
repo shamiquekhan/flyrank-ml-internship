@@ -1,0 +1,22 @@
+{
+  "refresh_cost_estimate_hours": {
+    "light_touch": 0.5,
+    "moderate_expand": 2.0,
+    "full_rewrite": 8.0
+  },
+  "expected_uplift_scenarios": {
+    "high_impression_stale": {
+      "impressions_gain_pct": 50,
+      "confidence": "directional"
+    },
+    "ctr_gap_page1": {
+      "ctr_lift_pct": 30,
+      "confidence": "directional"
+    },
+    "low_visibility": {
+      "impressions_gain_pct": 10,
+      "confidence": "low"
+    }
+  },
+  "decision_rule": "Only act on HIGH_DECLINE_RISK or STALE_HIGH_VISIBILITY with impressions >= 1000 AND human confirms content quality issue. CTR_GAP_HIGH_IMP gets metadata review first (lower cost). LOW_VISIBILITY_DECLINE = monitor only."
+}

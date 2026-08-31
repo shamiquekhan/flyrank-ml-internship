@@ -1,0 +1,26 @@
+{
+  "base_rate_training": 0.542,
+  "baseline_precision_at_50": 0.58,
+  "model_precision_at_50_random": 0.96,
+  "model_precision_at_50_grouped": 0.744,
+  "drift_thresholds": {
+    "base_rate_shift_pp": 10,
+    "precision_at_50_min": 0.58,
+    "ks_test_pvalue": 0.01,
+    "new_client_share_max": 0.2,
+    "action_success_rate_min": 0.3,
+    "human_fp_rate_max": 0.4
+  },
+  "retrain_cadence": "quarterly_minimum",
+  "event_triggers": [
+    "google_core_update",
+    "major_traffic_shift",
+    "warehouse_panel_expansion"
+  ],
+  "weekly_dashboard_metrics": [
+    "queue_size_by_reason_code",
+    "top50_review_completion_rate",
+    "action_taken_distribution",
+    "acted_pages_30d_impression_change"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "queue_total_pages": 3980,
+  "model_used": "RandomForest (Week-5, grouped-split validated)",
+  "base_rate": 0.5421,
+  "baseline_precision_at_50": 0.58,
+  "model_precision_at_50_random": 0.96,
+  "model_precision_at_50_grouped": 0.744,
+  "reason_code_counts": {
+    "MONITOR": 2713,
+    "CTR_GAP_HIGH_IMP": 632,
+    "HIGH_DECLINE_RISK": 324,
+    "LOW_VISIBILITY_DECLINE": 311
+  },
+  "action_label_counts": {
+    "Monitor": 3024,
+    "Update Metadata": 632,
+    "Refresh Content": 324
+  },
+  "top50_declining_rate": 0.96,
+  "limits": [
+    "Single 90-day snapshot (no temporal generalization)",
+    "Proxy label: current trend direction, not future decline",
+    "Grouped split P@50 = 74.4% (random split overestimates)",
+    "No causal claim: refresh may not reverse decline",
+    "Starter dataset only (30K rows, 32 clients)"
+  ],
+  "no_go_automation": [
+    "Auto-refresh content",
+    "Auto-rewrite titles/metas",
+    "Auto-redirect or delete pages",
+    "Allocate budget based solely on score",
+    "Trigger recrawl automatically",
+    "Replace human QA",
+    "Generalize to new clients/verticals without re-validation"
+  ]
+}
